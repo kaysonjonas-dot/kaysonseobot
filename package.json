@@ -1,0 +1,8 @@
+{
+  "name": "seo-analyzer",
+  "version": "1.0.0",
+  "description": "SEO 頁面分析工具",
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}
