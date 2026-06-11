@@ -1,0 +1,1052 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SEO 頁面分析工具</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: #000;
+            min-height: 100vh;
+            padding: 20px;
+            color: #fff;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* 動態光線背景 */
+        body::before {
+            content: '';
+            position: fixed;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background:
+                radial-gradient(ellipse at 20% 20%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 80%, rgba(255, 119, 198, 0.15) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 50%, rgba(100, 200, 255, 0.1) 0%, transparent 60%);
+            animation: lightMove 20s ease-in-out infinite;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        @keyframes lightMove {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            33% { transform: translate(2%, 2%) rotate(120deg); }
+            66% { transform: translate(-1%, 3%) rotate(240deg); }
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        h1.main-title {
+            text-align: center;
+            font-size: 2.8rem;
+            margin-bottom: 8px;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.7) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: rgba(255,255,255,0.5);
+            margin-bottom: 40px;
+            font-size: 1.1rem;
+            font-weight: 400;
+            letter-spacing: 0.02em;
+        }
+
+        /* Liquid Glass 主卡片 */
+        .glass {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(40px) saturate(180%);
+            -webkit-backdrop-filter: blur(40px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 24px;
+            box-shadow:
+                0 8px 32px rgba(0, 0, 0, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1),
+                inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* 光線折射效果 */
+        .glass::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 50%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent);
+            transform: skewX(-20deg);
+            transition: left 0.7s ease;
+            pointer-events: none;
+        }
+
+        .glass:hover::before {
+            left: 150%;
+        }
+
+        .input-section {
+            composes: glass;
+            padding: 32px;
+            margin-bottom: 30px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .tab {
+            padding: 10px 24px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            font-size: 1rem;
+            color: rgba(255, 255, 255, 0.5);
+            border-radius: 12px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-weight: 500;
+            position: relative;
+        }
+
+        .tab.active {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 2px 8px rgba(0,0,0,0.2);
+        }
+
+        .tab:hover:not(.active) {
+            background: rgba(255, 255, 255, 0.05);
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .input-group { margin-bottom: 20px; }
+
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.95rem;
+        }
+
+        input[type="url"], textarea {
+            width: 100%;
+            padding: 16px 18px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            font-size: 1rem;
+            transition: all 0.3s;
+            font-family: inherit;
+            color: #fff;
+            backdrop-filter: blur(10px);
+        }
+
+        input[type="url"]::placeholder, textarea::placeholder {
+            color: rgba(255, 255, 255, 0.3);
+        }
+
+        input[type="url"]:focus, textarea:focus {
+            outline: none;
+            border-color: rgba(255, 255, 255, 0.3);
+            background: rgba(0, 0, 0, 0.4);
+            box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+
+        textarea { min-height: 200px; resize: vertical; }
+
+        .hint {
+            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.4);
+            margin-top: 8px;
+            line-height: 1.5;
+        }
+
+        .btn {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(20px);
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 16px 48px;
+            font-size: 1.1rem;
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-weight: 600;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .results { display: none; }
+        .results.active { display: block; }
+
+        .card {
+            composes: glass;
+            padding: 28px;
+            margin-bottom: 24px;
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .card-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            letter-spacing: -0.01em;
+        }
+
+        .card-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        }
+
+        .status-badge {
+            padding: 6px 16px;
+            border-radius: 100px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+
+        .status-good {
+            background: rgba(46, 204, 113, 0.15);
+            color: #2ecc71;
+            border-color: rgba(46, 204, 113, 0.3);
+        }
+
+        .status-warning {
+            background: rgba(241, 196, 15, 0.15);
+            color: #f1c40f;
+            border-color: rgba(241, 196, 15, 0.3);
+        }
+
+        .status-error {
+            background: rgba(231, 76, 60, 0.15);
+            color: #e74c3c;
+            border-color: rgba(231, 76, 60, 0.3);
+        }
+
+        .status-info {
+            background: rgba(52, 152, 219, 0.15);
+            color: #3498db;
+            border-color: rgba(52, 152, 219, 0.3);
+        }
+
+        .metric {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .metric:last-child { border-bottom: none; }
+
+        .metric-label {
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .metric-value {
+            font-family: 'SF Mono', 'Courier New', monospace;
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .content-box {
+            background: rgba(0, 0, 0, 0.25);
+            backdrop-filter: blur(20px);
+            border-radius: 16px;
+            padding: 18px;
+            margin-top: 16px;
+            font-size: 0.95rem;
+            line-height: 1.7;
+            word-break: break-all;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.85);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 100px;
+            overflow: hidden;
+            margin-top: 10px;
+            box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.3);
+        }
+
+        .progress-fill {
+            height: 100%;
+            border-radius: 100px;
+            transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .progress-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(200%); }
+        }
+
+        .progress-good { background: linear-gradient(90deg, rgba(46, 204, 113, 0.8), rgba(46, 204, 113, 1)); }
+        .progress-warning { background: linear-gradient(90deg, rgba(241, 196, 15, 0.8), rgba(241, 196, 15, 1)); }
+        .progress-error { background: linear-gradient(90deg, rgba(231, 76, 60, 0.8), rgba(231, 76, 60, 1)); }
+
+        .heading-tree { margin-top: 16px; }
+
+        .heading-item {
+            padding: 12px 16px;
+            margin: 8px 0;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 0.95rem;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            transition: all 0.2s;
+        }
+
+        .heading-item:hover {
+            background: rgba(255, 255, 255, 0.06);
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .heading-tag {
+            font-weight: 700;
+            padding: 4px 12px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            min-width: 44px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+
+        .h1-tag { background: rgba(231, 76, 60, 0.2); color: #ff6b6b; }
+        .h2-tag { background: rgba(230, 126, 34, 0.2); color: #ffa94d; }
+        .h3-tag { background: rgba(241, 196, 15, 0.2); color: #ffd43b; }
+        .h4-tag { background: rgba(52, 152, 219, 0.2); color: #74c0fc; }
+        .h5-tag { background: rgba(155, 89, 182, 0.2); color: #da77f2; }
+        .h6-tag { background: rgba(149, 165, 166, 0.2); color: #adb5bd; }
+
+        .heading-text {
+            flex: 1;
+            color: rgba(255, 255, 255, 0.85);
+        }
+
+        .heading-length {
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.4);
+            font-family: 'SF Mono', monospace;
+        }
+
+        .indent-1 { margin-left: 0; }
+        .indent-2 { margin-left: 24px; }
+        .indent-3 { margin-left: 48px; }
+        .indent-4 { margin-left: 72px; }
+        .indent-5 { margin-left: 96px; }
+        .indent-6 { margin-left: 120px; }
+
+        .schema-item {
+            background: rgba(0, 0, 0, 0.25);
+            backdrop-filter: blur(20px);
+            border-radius: 16px;
+            padding: 20px;
+            margin: 12px 0;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        }
+
+        .schema-type {
+            font-weight: 700;
+            color: #74c0fc;
+            font-size: 1.05rem;
+            margin-bottom: 10px;
+        }
+
+        .schema-format {
+            display: inline-block;
+            background: rgba(52, 152, 219, 0.15);
+            color: #74c0fc;
+            padding: 4px 12px;
+            border-radius: 100px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+            border: 1px solid rgba(52, 152, 219, 0.2);
+        }
+
+        .schema-code {
+            background: rgba(0, 0, 0, 0.4);
+            color: #a8e6cf;
+            padding: 16px;
+            border-radius: 12px;
+            font-family: 'SF Mono', 'Courier New', monospace;
+            font-size: 0.85rem;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        .empty-state-icon {
+            font-size: 3rem;
+            margin-bottom: 16px;
+            opacity: 0.6;
+        }
+
+        .issue-list { margin-top: 16px; }
+
+        .issue-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 12px;
+            margin: 8px 0;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(10px);
+        }
+
+        .issue-icon {
+            font-size: 1.2rem;
+            margin-top: 2px;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .loading.active { display: block; }
+
+        .spinner {
+            width: 56px;
+            height: 56px;
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-top: 3px solid rgba(255, 255, 255, 0.8);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-top: 24px;
+        }
+
+        .summary-item {
+            background: rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(20px);
+            border-radius: 16px;
+            padding: 24px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            transition: all 0.3s;
+        }
+
+        .summary-item:hover {
+            background: rgba(0, 0, 0, 0.3);
+            border-color: rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .summary-number {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: #fff;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+        }
+
+        .summary-label {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 0.9rem;
+            margin-top: 6px;
+        }
+
+        @media (max-width: 768px) {
+            h1.main-title { font-size: 2rem; }
+            .card { padding: 20px; }
+            .heading-item { flex-wrap: wrap; }
+            .input-section { padding: 24px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="main-title">SEO 頁面分析工具</h1>
+        <p class="subtitle">檢查 Meta、Heading 結構與 Schema 標記</p>
+
+        <div class="input-section glass">
+            <div class="tabs">
+                <button class="tab active" onclick="switchTab('url')">輸入網址</button>
+                <button class="tab" onclick="switchTab('html')">貼上 HTML</button>
+            </div>
+
+            <div id="url-tab" class="tab-content active">
+                <div class="input-group">
+                    <label for="url-input">頁面網址</label>
+                    <input type="url" id="url-input" placeholder="https://example.com" />
+                    <p class="hint">已使用 Cloudflare Worker 代理服務抓取外部網站。如果抓取失敗，請使用「貼上 HTML」方式。</p>
+                </div>
+            </div>
+
+            <div id="html-tab" class="tab-content">
+                <div class="input-group">
+                    <label for="html-input">HTML 原始碼</label>
+                    <textarea id="html-input" placeholder="將網頁的 HTML 原始碼貼上於此..."></textarea>
+                    <p class="hint">在瀏覽器中按 Ctrl+U (或 Cmd+Option+U) 查看原始碼，全選複製後貼上。</p>
+                </div>
+            </div>
+
+            <button class="btn" id="analyze-btn" onclick="analyze()">開始分析</button>
+        </div>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p style="color: rgba(255,255,255,0.6);">分析中...</p>
+        </div>
+
+        <div class="results" id="results"></div>
+    </div>
+
+    <script>
+        const STANDARDS = {
+            title: { min: 10, max: 60, ideal: '30-60 字元' },
+            description: { min: 50, max: 160, ideal: '120-160 字元' },
+            h1: { min: 5, max: 70, ideal: '20-70 字元' }
+        };
+
+        function switchTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById(tab + '-tab').classList.add('active');
+        }
+
+        async function analyze() {
+            const urlTab = document.getElementById('url-tab').classList.contains('active');
+            let html = '';
+
+            if (urlTab) {
+                const url = document.getElementById('url-input').value.trim();
+                if (!url) { alert('請輸入網址'); return; }
+                html = await fetchUrl(url);
+            } else {
+                html = document.getElementById('html-input').value.trim();
+                if (!html) { alert('請貼上 HTML 原始碼'); return; }
+            }
+
+            if (!html) return;
+
+            document.getElementById('loading').classList.add('active');
+            document.getElementById('results').classList.remove('active');
+
+            setTimeout(() => {
+                try {
+                    const results = performAnalysis(html);
+                    renderResults(results);
+                } catch (e) {
+                    console.error('Analysis error:', e);
+                    alert('分析時發生錯誤：' + e.message);
+                }
+                document.getElementById('loading').classList.remove('active');
+                document.getElementById('results').classList.add('active');
+            }, 300);
+        }
+
+        async function fetchUrl(url) {
+            try {
+                const proxyUrl = 'https://steep-dust-b2bf.kaysonjonas.workers.dev/?url=' + encodeURIComponent(url);
+                console.log('Fetching:', proxyUrl);
+                const response = await fetch(proxyUrl);
+                console.log('Response status:', response.status);
+                if (response.ok) {
+                    const html = await response.text();
+                    console.log('Fetched HTML length:', html.length);
+                    return html;
+                }
+            } catch (e) {
+                console.error('Cloudflare Worker failed:', e);
+            }
+            alert('無法抓取該網址。請使用「貼上 HTML」方式進行分析。\n\n錯誤：代理服務無法存取該網站。');
+            return '';
+        }
+
+        function performAnalysis(html) {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            return {
+                meta: analyzeMeta(doc),
+                headings: analyzeHeadings(doc),
+                schema: analyzeSchema(doc, html)
+            };
+        }
+
+        function analyzeMeta(doc) {
+            const title = doc.querySelector('title');
+            const titleText = title ? title.textContent.trim() : '';
+            
+            let description = '';
+            const allMetas = doc.querySelectorAll('meta');
+            
+            for (const meta of allMetas) {
+                const name = meta.getAttribute('name');
+                if (name && name.toLowerCase() === 'description') {
+                    description = meta.getAttribute('content') || '';
+                    break;
+                }
+            }
+            
+            if (!description) {
+                for (const meta of allMetas) {
+                    const property = meta.getAttribute('property');
+                    if (property && property.toLowerCase() === 'og:description') {
+                        description = meta.getAttribute('content') || '';
+                        break;
+                    }
+                }
+            }
+            
+            if (!description) {
+                for (const meta of allMetas) {
+                    const name = meta.getAttribute('name');
+                    if (name && name.toLowerCase() === 'twitter:description') {
+                        description = meta.getAttribute('content') || '';
+                        break;
+                    }
+                }
+            }
+
+            const titleLength = titleText.length;
+            const descLength = description.length;
+
+            return {
+                title: { content: titleText, length: titleLength, status: getStatus(titleLength, STANDARDS.title), exists: !!titleText },
+                description: { content: description, length: descLength, status: getStatus(descLength, STANDARDS.description), exists: !!description }
+            };
+        }
+
+        function analyzeHeadings(doc) {
+            const headings = [];
+            const h1Elements = doc.querySelectorAll('h1');
+            const allHeadings = doc.querySelectorAll('h1, h2, h3, h4, h5, h6');
+            let lastLevel = 0;
+            const issues = [];
+
+            allHeadings.forEach((h, index) => {
+                const level = parseInt(h.tagName[1]);
+                const text = h.textContent.trim();
+                if (level > lastLevel + 1 && lastLevel !== 0) {
+                    issues.push(`H${lastLevel} 直接跳到 H${level}，缺少 H${lastLevel + 1}`);
+                }
+                headings.push({ tag: h.tagName.toLowerCase(), level: level, text: text, length: text.length });
+                lastLevel = level;
+            });
+
+            if (h1Elements.length === 0) issues.push('頁面缺少 H1 標題');
+            else if (h1Elements.length > 1) issues.push(`頁面有 ${h1Elements.length} 個 H1 標題，建議只保留一個`);
+
+            const h1Text = h1Elements.length > 0 ? h1Elements[0].textContent.trim() : '';
+            return { headings: headings, h1Count: h1Elements.length, h1Text: h1Text, h1Length: h1Text.length, h1Status: getStatus(h1Text.length, STANDARDS.h1), issues: issues, structure: getHeadingStructure(headings) };
+        }
+
+        function getHeadingStructure(headings) {
+            const structure = [];
+            const stack = [{ level: 0, children: structure }];
+            headings.forEach(h => {
+                const item = { ...h, children: [] };
+                while (stack.length > 1 && stack[stack.length - 1].level >= h.level) { stack.pop(); }
+                stack[stack.length - 1].children.push(item);
+                stack.push({ level: h.level, children: item.children });
+            });
+            return structure;
+        }
+
+        function analyzeSchema(doc, html) {
+            const schemas = [];
+            const jsonLdScripts = doc.querySelectorAll('script[type="application/ld+json"]');
+            jsonLdScripts.forEach((script, index) => {
+                try {
+                    const data = JSON.parse(script.textContent);
+                    const types = extractSchemaTypes(data);
+                    schemas.push({ format: 'JSON-LD', types: types, content: script.textContent.trim(), index: index + 1 });
+                } catch (e) {
+                    schemas.push({ format: 'JSON-LD', types: ['解析錯誤'], content: script.textContent.trim(), index: index + 1, error: true });
+                }
+            });
+
+            const microdataElements = doc.querySelectorAll('[itemscope]');
+            microdataElements.forEach((el, index) => {
+                const type = el.getAttribute('itemtype') || '未知類型';
+                schemas.push({ format: 'Microdata', types: [type.split('/').pop() || type], content: el.outerHTML.substring(0, 500) + (el.outerHTML.length > 500 ? '...' : ''), index: index + 1 });
+            });
+
+            const rdfaElements = doc.querySelectorAll('[typeof]');
+            rdfaElements.forEach((el, index) => {
+                const type = el.getAttribute('typeof') || '未知類型';
+                schemas.push({ format: 'RDFa', types: [type.split(':').pop() || type], content: el.outerHTML.substring(0, 500) + (el.outerHTML.length > 500 ? '...' : ''), index: index + 1 });
+            });
+
+            return schemas;
+        }
+
+        function extractSchemaTypes(data) {
+            const types = [];
+            function extract(obj) {
+                if (Array.isArray(obj)) { obj.forEach(extract); }
+                else if (obj && typeof obj === 'object') {
+                    if (obj['@type']) types.push(obj['@type']);
+                    Object.values(obj).forEach(extract);
+                }
+            }
+            extract(data);
+            return types.length > 0 ? types : ['未知類型'];
+        }
+
+        function getStatus(length, standard) {
+            if (length === 0) return 'missing';
+            if (length < standard.min) return 'warning';
+            if (length > standard.max) return 'error';
+            return 'good';
+        }
+
+        function getStatusConfig(status) {
+            const configs = {
+                good: { class: 'status-good', text: '符合標準', icon: '✓' },
+                warning: { class: 'status-warning', text: '字數過少', icon: '!' },
+                error: { class: 'status-error', text: '字數過多', icon: '✕' },
+                missing: { class: 'status-error', text: '缺少內容', icon: '✕' }
+            };
+            return configs[status] || configs.warning;
+        }
+
+        function renderResults(data) {
+            const container = document.getElementById('results');
+            const meta = data.meta;
+            const headings = data.headings;
+            const schemas = data.schema;
+            let html = '';
+            html += renderSummary(meta, headings, schemas);
+            html += renderMetaCard('Meta Title', 'T', meta.title, STANDARDS.title, '#dc3545');
+            html += renderMetaCard('Meta Description', 'D', meta.description, STANDARDS.description, '#fd7e14');
+            html += renderH1Card(headings);
+            html += renderHeadingStructure(headings);
+            html += renderSchema(schemas);
+            container.innerHTML = html;
+        }
+
+        function renderSummary(meta, headings, schemas) {
+            const totalIssues = (meta.title.status !== 'good' ? 1 : 0) + (meta.description.status !== 'good' ? 1 : 0) + (headings.h1Status !== 'good' ? 1 : 0) + headings.issues.length;
+            return `
+                <div class="card glass">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <div class="card-icon">📊</div>
+                            分析總覽
+                        </div>
+                        <span class="status-badge ${totalIssues === 0 ? 'status-good' : 'status-warning'}">
+                            ${totalIssues === 0 ? '全部通過' : `${totalIssues} 個問題`}
+                        </span>
+                    </div>
+                    <div class="summary-grid">
+                        <div class="summary-item">
+                            <div class="summary-number">${meta.title.length}</div>
+                            <div class="summary-label">Title 長度</div>
+                        </div>
+                        <div class="summary-item">
+                            <div class="summary-number">${meta.description.length}</div>
+                            <div class="summary-label">Description 長度</div>
+                        </div>
+                        <div class="summary-item">
+                            <div class="summary-number">${headings.h1Count}</div>
+                            <div class="summary-label">H1 數量</div>
+                        </div>
+                        <div class="summary-item">
+                            <div class="summary-number">${headings.headings.length}</div>
+                            <div class="summary-label">總標題數</div>
+                        </div>
+                        <div class="summary-item">
+                            <div class="summary-number">${schemas.length}</div>
+                            <div class="summary-label">Schema 數量</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderMetaCard(title, icon, data, standard, color) {
+            const status = getStatusConfig(data.status);
+            const percentage = data.exists ? Math.min((data.length / standard.max) * 100, 100) : 0;
+            const progressClass = data.status === 'good' ? 'progress-good' : data.status === 'warning' ? 'progress-warning' : 'progress-error';
+            return `
+                <div class="card glass">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <div class="card-icon" style="background: ${color}22; color: ${color}; border-color: ${color}44;">${icon}</div>
+                            ${title}
+                        </div>
+                        <span class="status-badge ${status.class}">${status.icon} ${status.text}</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">字數</span>
+                        <span class="metric-value">${data.length} / ${standard.max} 字元</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill ${progressClass}" style="width: ${percentage}%"></div>
+                    </div>
+                    <div class="metric" style="margin-top: 16px;">
+                        <span class="metric-label">建議範圍</span>
+                        <span class="metric-value" style="color: rgba(255,255,255,0.7);">${standard.ideal}</span>
+                    </div>
+                    ${data.exists ? `
+                        <div class="content-box">
+                            <strong style="color: rgba(255,255,255,0.7);">內容：</strong><br/>
+                            ${escapeHtml(data.content)}
+                        </div>
+                    ` : `
+                        <div class="content-box" style="border-color: rgba(231, 76, 60, 0.3); background: rgba(231, 76, 60, 0.1);">
+                            <strong style="color: #ff6b6b;">⚠️ 缺少 ${title}</strong><br/>
+                            請在 &lt;head&gt; 中加入 &lt;${title === 'Meta Title' ? 'title' : 'meta name="description"'}&gt; 標籤
+                        </div>
+                    `}
+                </div>
+            `;
+        }
+
+        function renderH1Card(headings) {
+            const status = getStatusConfig(headings.h1Status);
+            const percentage = headings.h1Text ? Math.min((headings.h1Length / STANDARDS.h1.max) * 100, 100) : 0;
+            const progressClass = headings.h1Status === 'good' ? 'progress-good' : headings.h1Status === 'warning' ? 'progress-warning' : 'progress-error';
+            return `
+                <div class="card glass">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <div class="card-icon" style="background: rgba(231, 76, 60, 0.2); color: #ff6b6b; border-color: rgba(231, 76, 60, 0.3);">H1</div>
+                            H1 標題
+                        </div>
+                        <span class="status-badge ${status.class}">${status.icon} ${status.text}</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">數量</span>
+                        <span class="metric-value" style="color: ${headings.h1Count === 1 ? '#2ecc71' : '#ff6b6b'};">${headings.h1Count} 個</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">字數</span>
+                        <span class="metric-value">${headings.h1Length} / ${STANDARDS.h1.max} 字元</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill ${progressClass}" style="width: ${percentage}%"></div>
+                    </div>
+                    ${headings.h1Text ? `
+                        <div class="content-box">
+                            <strong style="color: rgba(255,255,255,0.7);">內容：</strong><br/>
+                            ${escapeHtml(headings.h1Text)}
+                        </div>
+                    ` : ''}
+                    ${headings.h1Count !== 1 ? `
+                        <div class="issue-list">
+                            <div class="issue-item" style="background: rgba(231, 76, 60, 0.1); border-color: rgba(231, 76, 60, 0.2);">
+                                <span class="issue-icon">⚠️</span>
+                                <span>建議每個頁面只使用 <strong style="color: #ff6b6b;">一個 H1</strong> 標題</span>
+                            </div>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        }
+
+        function renderHeadingStructure(headings) {
+            let treeHtml = renderHeadingTree(headings.structure);
+            let issuesHtml = '';
+            if (headings.issues.length > 0) {
+                issuesHtml = `
+                    <div style="margin-top: 20px;">
+                        <h4 style="margin-bottom: 12px; color: #ff6b6b; font-size: 1rem;">⚠️ 結構問題</h4>
+                        ${headings.issues.map(issue => `
+                            <div class="issue-item" style="background: rgba(241, 196, 15, 0.1); border-color: rgba(241, 196, 15, 0.2);">
+                                <span class="issue-icon">⚡</span>
+                                <span>${escapeHtml(issue)}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
+            return `
+                <div class="card glass">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <div class="card-icon" style="background: rgba(155, 89, 182, 0.2); color: #da77f2; border-color: rgba(155, 89, 182, 0.3);">H</div>
+                            Heading 結構
+                        </div>
+                        <span class="status-badge ${headings.issues.length === 0 ? 'status-good' : 'status-warning'}">
+                            ${headings.issues.length === 0 ? '結構良好' : `${headings.issues.length} 個問題`}
+                        </span>
+                    </div>
+                    <div class="heading-tree">
+                        ${treeHtml || '<p style="color: rgba(255,255,255,0.4);">沒有找到任何標題</p>'}
+                    </div>
+                    ${issuesHtml}
+                </div>
+            `;
+        }
+
+        function renderHeadingTree(structure, depth = 1) {
+            if (!structure || structure.length === 0) return '';
+            return structure.map(item => `
+                <div class="heading-item indent-${Math.min(item.level, 6)}">
+                    <span class="heading-tag h${item.level}-tag">H${item.level}</span>
+                    <span class="heading-text">${escapeHtml(item.text)}</span>
+                    <span class="heading-length">${item.length} 字</span>
+                </div>
+                ${renderHeadingTree(item.children, depth + 1)}
+            `).join('');
+        }
+
+        function renderSchema(schemas) {
+            if (schemas.length === 0) {
+                return `
+                    <div class="card glass">
+                        <div class="card-header">
+                            <div class="card-title">
+                                <div class="card-icon" style="background: rgba(52, 152, 219, 0.2); color: #74c0fc; border-color: rgba(52, 152, 219, 0.3);">S</div>
+                                Schema 結構化資料
+                            </div>
+                            <span class="status-badge status-info">未檢測到</span>
+                        </div>
+                        <div class="empty-state">
+                            <div class="empty-state-icon">🔍</div>
+                            <p>未檢測到 Schema.org 結構化資料</p>
+                            <p style="font-size: 0.9rem; margin-top: 10px;">建議加入 JSON-LD 格式結構化資料以提升搜尋結果顯示</p>
+                        </div>
+                    </div>
+                `;
+            }
+            const schemaItems = schemas.map((schema, index) => `
+                <div class="schema-item">
+                    <div class="schema-type">${escapeHtml(schema.types.join(', '))}</div>
+                    <span class="schema-format">${schema.format} #${schema.index}</span>
+                    ${schema.error ? '<span class="status-badge status-error" style="margin-left: 10px;">JSON 解析錯誤</span>' : ''}
+                    <div class="schema-code">${escapeHtml(schema.content)}</div>
+                </div>
+            `).join('');
+            return `
+                <div class="card glass">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <div class="card-icon" style="background: rgba(52, 152, 219, 0.2); color: #74c0fc; border-color: rgba(52, 152, 219, 0.3);">S</div>
+                            Schema 結構化資料
+                        </div>
+                        <span class="status-badge status-good">${schemas.length} 個標記</span>
+                    </div>
+                    ${schemaItems}
+                </div>
+            `;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    </script>
+</body>
+</html>
